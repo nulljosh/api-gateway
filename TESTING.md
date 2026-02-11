@@ -80,7 +80,7 @@ Status: 200
 Response: {"healthy_backends":2,"status":"ok","timestamp":"2026-02-10T12:23:50Z","total_backends":2}
 ```
 
-✅ **Test**: Gateway reports both backends as healthy
+ **Test**: Gateway reports both backends as healthy
 
 ### 2. Request Routing
 
@@ -100,7 +100,7 @@ Expected output shows alternating backends:
     User ID: 4, Backend: http://localhost:8082
 ```
 
-✅ **Test**: Load balancing works correctly (round-robin)
+ **Test**: Load balancing works correctly (round-robin)
 
 ### 3. Echo Endpoint
 
@@ -116,7 +116,7 @@ Expected response includes request body echoed back:
     Backend: http://localhost:8082
 ```
 
-✅ **Test**: Requests are proxied correctly
+ **Test**: Requests are proxied correctly
 
 ### 4. Authentication
 
@@ -136,7 +136,7 @@ Testing authentication...
    Backend: http://localhost:8081
 ```
 
-✅ **Test**: Invalid keys are rejected (401), valid keys are accepted (200)
+ **Test**: Invalid keys are rejected (401), valid keys are accepted (200)
 
 ### 5. Rate Limiting (Per IP)
 
@@ -153,7 +153,7 @@ Testing rate limiting (150 requests)...
 Successful: 100/150, Limited: 50/150
 ```
 
-✅ **Test**: Requests are limited to ~100/minute per IP
+ **Test**: Requests are limited to ~100/minute per IP
 
 ### 6. Slow Endpoint
 
@@ -169,7 +169,7 @@ Testing /api/slow endpoint (1 requests)...
     Backend: http://localhost:8081
 ```
 
-✅ **Test**: Slow backends are handled correctly
+ **Test**: Slow backends are handled correctly
 
 ### 7. Request Logging
 
@@ -191,7 +191,7 @@ Expected log entries:
 }
 ```
 
-✅ **Test**: All requests are logged with status, backend, and response time
+ **Test**: All requests are logged with status, backend, and response time
 
 ## Integration Tests
 
@@ -229,7 +229,7 @@ pkill -f "port 8081"
    - Gateway detects Backend-1 is healthy again
    - Requests start routing to both backends
 
-✅ **Test**: Failover and recovery work correctly
+ **Test**: Failover and recovery work correctly
 
 ### Test 3: API Key Rate Limiting
 
@@ -243,7 +243,7 @@ done
 
 Expected: Around request 1000, you'll see 429 responses (after limit is hit).
 
-✅ **Test**: Per-key rate limiting works (1000 req/min default)
+ **Test**: Per-key rate limiting works (1000 req/min default)
 
 ## Stress Tests
 
@@ -360,10 +360,10 @@ rm gateway.log
 ## Expected Results
 
 All tests should pass with:
-- ✅ Proper request routing
-- ✅ Load balancing across backends
-- ✅ Authentication enforcement
-- ✅ Rate limiting enforcement
-- ✅ Health check functionality
-- ✅ Automatic failover
-- ✅ Comprehensive logging
+-  Proper request routing
+-  Load balancing across backends
+-  Authentication enforcement
+-  Rate limiting enforcement
+-  Health check functionality
+-  Automatic failover
+-  Comprehensive logging

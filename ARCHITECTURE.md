@@ -336,13 +336,13 @@ Initial state:
   refill_rate = 100/60 = 1.67 tokens/sec
   tokens = 100
 
-Request 1: tokens = 99 ✅
+Request 1: tokens = 99 
 Request 2-100: tokens decrements each time
 
 After 5 seconds (no requests):
   elapsed = 5
   tokens = min(100, 0 + 5*1.67) = 8.35
-  Request 101: ✅ (consume 1 token)
+  Request 101:  (consume 1 token)
   tokens = 7.35
 ```
 

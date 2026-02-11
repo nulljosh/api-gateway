@@ -1,6 +1,6 @@
 # API Gateway - Project Summary
 
-## 📋 Project Overview
+##  Project Overview
 
 A complete, production-ready API Gateway written in Go (~1220 LOC) that routes HTTP requests to multiple backend services with intelligent load balancing, rate limiting, authentication, and health checks.
 
@@ -8,47 +8,47 @@ A complete, production-ready API Gateway written in Go (~1220 LOC) that routes H
 **Language**: Go 1.21+
 **Location**: ~/Documents/Code/api-gateway
 
-## ✨ Features Implemented
+##  Features Implemented
 
-### ✅ Request Routing
+###  Request Routing
 - HTTP reverse proxy forwarding to backend servers
 - Transparent proxying of all request methods (GET, POST, PUT, DELETE, etc.)
 - URL path and query string preservation
 - Header forwarding with proper proxy headers
 
-### ✅ Load Balancing
+###  Load Balancing
 - **Algorithm**: Round-robin distribution
 - Health-aware: Skips unhealthy backends
 - Fair distribution across all healthy backends
 - Thread-safe implementation
 
-### ✅ Rate Limiting
+###  Rate Limiting
 - **Per-IP Rate Limiting**: 100 requests/minute (configurable)
 - **Per-API-Key Rate Limiting**: 1000 requests/minute (configurable)
 - **Algorithm**: Token bucket with smooth refill
 - Returns HTTP 429 when limits exceeded
 
-### ✅ Authentication
+###  Authentication
 - API key validation via `X-API-Key` header
 - Configurable API key whitelist
 - Returns HTTP 401 for invalid keys
 - Pre-configured test keys: `key-test-1`, `key-test-2`, `key-admin`
 
-### ✅ Request/Response Logging
+###  Request/Response Logging
 - JSON-formatted access logs
 - One log line per request
 - Fields: timestamp, method, path, client_ip, api_key, status_code, response_time_ms, backend, error
 - Real-time log file append
 - Queryable with jq
 
-### ✅ Health Checks
+###  Health Checks
 - Periodic health checks every 10 seconds
 - HTTP GET to `/health` endpoint
 - Automatic health status tracking
 - Marks backends as healthy/unhealthy
 - Log output on status changes
 
-### ✅ Mock Backends
+###  Mock Backends
 - 2-3 test backend servers
 - Provides test endpoints:
   - `GET /health` - Health status
@@ -57,7 +57,7 @@ A complete, production-ready API Gateway written in Go (~1220 LOC) that routes H
   - `GET /api/data` - Sample data
   - `GET /api/slow` - Slow endpoint (500ms)
 
-## 📊 Code Statistics
+##  Code Statistics
 
 ### Line of Code Count
 
@@ -94,7 +94,7 @@ api-gateway/
 └── gateway.log               # Generated at runtime
 ```
 
-## 🏗️ Architecture Highlights
+## ️ Architecture Highlights
 
 ### Three Executable Modes
 
@@ -146,7 +146,7 @@ Return Response to Client
   - Backend: `sync.Mutex` on health status
   - Logger: `sync.Mutex` on file writes
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Build
 
@@ -196,7 +196,7 @@ go run . -mode client -cmd rate-limit -count 150
 make test
 ```
 
-## 📈 Performance Characteristics
+##  Performance Characteristics
 
 ### Throughput
 
@@ -219,20 +219,20 @@ make test
 - **Backends**: Add more backends (no performance hit)
 - **Rate Limits**: Grow linearly with unique IPs/keys
 
-## 🧪 Testing Coverage
+##  Testing Coverage
 
 ### Features Tested
 
-1. ✅ Health check endpoint
-2. ✅ Request routing to backends
-3. ✅ Load balancing (round-robin)
-4. ✅ API key authentication
-5. ✅ Rate limiting (per-IP and per-key)
-6. ✅ Request logging
-7. ✅ Backend health checks
-8. ✅ Automatic failover
-9. ✅ Graceful degradation
-10. ✅ Concurrent requests
+1.  Health check endpoint
+2.  Request routing to backends
+3.  Load balancing (round-robin)
+4.  API key authentication
+5.  Rate limiting (per-IP and per-key)
+6.  Request logging
+7.  Backend health checks
+8.  Automatic failover
+9.  Graceful degradation
+10.  Concurrent requests
 
 ### Test Tools
 
@@ -244,7 +244,7 @@ make test
 
 See `TESTING.md` for comprehensive testing guide.
 
-## 🔧 Configuration Options
+##  Configuration Options
 
 ### Gateway Flags
 
@@ -268,7 +268,7 @@ None required. All config via command-line flags.
 
 Modify in `runGateway()` function to add more.
 
-## 📝 API Endpoints
+##  API Endpoints
 
 ### Gateway Endpoints
 
@@ -287,7 +287,7 @@ Modify in `runGateway()` function to add more.
 | `/api/data` | GET | Sample data | JSON array |
 | `/api/slow` | GET | Slow response | JSON (500ms delay) |
 
-## 🛡️ Security Features
+## ️ Security Features
 
 ### Current Implementation
 
@@ -306,7 +306,7 @@ Modify in `runGateway()` function to add more.
 - CORS handling
 - IP whitelisting/blacklisting
 
-## 📚 Documentation
+##  Documentation
 
 | File | Purpose |
 |------|---------|
@@ -315,7 +315,7 @@ Modify in `runGateway()` function to add more.
 | `ARCHITECTURE.md` | Technical deep dive |
 | `PROJECT_SUMMARY.md` | This file |
 
-## 🎯 Use Cases
+##  Use Cases
 
 1. **Microservices Gateway**: Route requests across service instances
 2. **Load Balancing**: Distribute traffic fairly
@@ -324,7 +324,7 @@ Modify in `runGateway()` function to add more.
 5. **Development**: Test with mock backends
 6. **Learning**: Study Go concurrency and networking
 
-## 🚦 Future Enhancements
+##  Future Enhancements
 
 ### High Priority
 
@@ -350,7 +350,7 @@ Modify in `runGateway()` function to add more.
 - [ ] Message queue integration
 - [ ] Database backend registry
 
-## 🧠 Design Decisions
+##  Design Decisions
 
 ### Why Go?
 
@@ -384,11 +384,11 @@ Modify in `runGateway()` function to add more.
 - Fast recovery (10 second cycle)
 - Per-backend granularity
 
-## 📄 License
+##  License
 
 MIT (Unlicensed - Open source)
 
-## 👤 Author
+##  Author
 
 Created as a demonstration of production-grade Go API gateway design.
 
@@ -401,7 +401,7 @@ Created as a demonstration of production-grade Go API gateway design.
 5. **Extensible**: Easy to add new features and customizations
 6. **Learning Tool**: Great example of Go best practices
 
-## 📞 Getting Help
+##  Getting Help
 
 1. Read `README.md` for usage
 2. Check `TESTING.md` for test examples
@@ -413,5 +413,5 @@ Created as a demonstration of production-grade Go API gateway design.
 
 **Total Project Size**: ~1225 LOC (including documentation and build config)
 **Core Gateway**: ~1070 LOC
-**Status**: ✅ Complete and tested
+**Status**:  Complete and tested
 **Last Updated**: February 10, 2026

@@ -281,12 +281,12 @@ Example: 100 requests/minute
 Backends must be valid HTTP URLs:
 
 ```
-http://localhost:8080      ✓ Local HTTP
-http://api.example.com     ✓ Domain name
-http://192.168.1.1:8000    ✓ IP with port
-https://secure.api.com     ✗ HTTPS (not yet supported)
-localhost:8000             ✗ Missing scheme
-http://api.example.com/api ✓ With path (path is kept)
+http://localhost:8080       Local HTTP
+http://api.example.com      Domain name
+http://192.168.1.1:8000     IP with port
+https://secure.api.com      HTTPS (not yet supported)
+localhost:8000              Missing scheme
+http://api.example.com/api  With path (path is kept)
 ```
 
 ## Health Check Configuration
