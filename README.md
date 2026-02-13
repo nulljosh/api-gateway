@@ -12,102 +12,116 @@ A production-ready API Gateway written in Go with request routing, rate limiting
 - **Health Checks**: Periodic health checks on backends with automatic failover
 - **Graceful Degradation**: Continues operating with reduced backend capacity
 
-## Architecture
+## Quick Start
 
-```
-Client Requests
-      ↓
-┌─────────────────────────────────────┐
-│   API Gateway (Port 8080)           │
-├─────────────────────────────────────┤
-│ • Auth Middleware (API Key Check)   │
-│ • Rate Limiter (Token Bucket)       │
-│ • Load Balancer (Round-Robin)       │
-│ • Request Logger                    │
-├─────────────────────────────────────┤
-│ Health Checker (Background)         │
-└─────────────────────────────────────┘
-      ↓      ↓      ↓
-   Backend1 Backend2 Backend3
-```
-
-## Building
+### Build
 
 ```bash
-# Build the gateway
-make build
-
-# Or manually
+cd ~/Documents/Code/api-gateway
 go build -o api-gateway .
 ```
 
-## Usage
+### Run All Services
 
-### Gateway Mode
-
+**Option 1: Using start.sh**
 ```bash
-# Start the gateway (routes to localhost:8081 and localhost:8082)
-go run . -mode gateway -port 8080 -backends http://localhost:8081,http://localhost:8082
-
-# Or with different rate limits
-go run . -mode gateway -port 8080 -rate-limit 200 -key-rate-limit 2000
+./start.sh
 ```
 
-**Configuration Options:**
-- `-port`: Gateway listening port (default: 8080)
-- `-backends`: Comma-separated list of backend URLs
-- `-rate-limit`: Requests per minute per IP (default: 100)
-- `-key-rate-limit`: Requests per minute per API key (default: 1000)
+**Option 2: Using Makefile**
+```bash
+# Terminal 1
+make gateway
+
+# Terminal 2
+make backend1
+
+# Terminal 3
+make backend2
+
+# Terminal 4
+make test
+```
+
+### Manual Start
+
+```bash
+# Terminal 1: Gateway
+./api-gateway -mode gateway -port 8080 -backends http://localhost:8081,http://localhost:8082
+
+# Terminal 2: Backend 1
+./api-gateway -mode backend -port 8081 -name "Backend-1"
+
+# Terminal 3: Backend 2
+./api-gateway -mode backend -port 8082 -name "Backend-2"
+
+# Terminal 4: Testing
+go run . -mode client -cmd health
+```
+
+## Configuration
+
+### Gateway Flags
+
+```bash
+-mode string              gateway|backend|client (default "gateway")
+-port int                 Listen port (default 8080)
+-backends string          Comma-separated backend URLs
+-rate-limit int          Requests/minute per IP (default 100)
+-key-rate-limit int      Requests/minute per key (default 1000)
+```
+
+### Examples
+
+```bash
+# Default configuration
+./api-gateway -mode gateway
+
+# Custom port and backends
+./api-gateway -mode gateway \
+  -port 9000 \
+  -backends http://service1.local:3000,http://service2.local:3000
+
+# Strict rate limiting
+./api-gateway -mode gateway \
+  -rate-limit 50 \
+  -key-rate-limit 500
+
+# Permissive rate limiting for development
+./api-gateway -mode gateway \
+  -rate-limit 10000 \
+  -key-rate-limit 100000
+```
 
 ### Backend Mode
 
 ```bash
-# Start backend 1 on port 8081
-go run . -mode backend -port 8081 -name "Backend-1"
+# Start backend on port 8081
+./api-gateway -mode backend -port 8081 -name "API-Service-1"
 
-# Start backend 2 on port 8082
-go run . -mode backend -port 8082 -name "Backend-2"
-
-# Start backend 3 on port 8083
-go run . -mode backend -port 8083 -name "Backend-3"
+# Start backend on port 8082
+./api-gateway -mode backend -port 8082 -name "API-Service-2"
 ```
 
-### Client Mode (Testing)
+### API Keys
 
-```bash
-# Check gateway health
-go run . -mode client -cmd health -endpoint http://localhost:8080
+Pre-configured test keys:
+- `key-test-1`
+- `key-test-2`
+- `key-admin`
 
-# Test echo endpoint
-go run . -mode client -cmd echo -endpoint http://localhost:8080 -count 5
+To add more keys, edit `main.go` in the `runGateway()` function:
 
-# Test user endpoint
-go run . -mode client -cmd user -endpoint http://localhost:8080 -count 3
-
-# Test with API key
-go run . -mode client -cmd user -endpoint http://localhost:8080 -key key-admin
-
-# Test authentication (will try valid and invalid keys)
-go run . -mode client -cmd auth -endpoint http://localhost:8080
-
-# Test rate limiting
-go run . -mode client -cmd rate-limit -endpoint http://localhost:8080 -count 150
+```go
+apiKeys["your-new-key"] = true
 ```
-
-**Available Commands:**
-- `health`: Check gateway health and backend status
-- `echo`: Echo POST request to backend
-- `user`: Get user data from backend
-- `data`: Get sample data (demonstrates load balancing)
-- `slow`: Test slow endpoint (500ms delay)
-- `auth`: Test authentication with various API keys
-- `rate-limit`: Test rate limiting behavior
 
 ## API Endpoints
 
 ### Gateway Endpoints
 
 **GET /health**
+
 Returns gateway health status and backend information.
 
 ```bash
@@ -119,7 +133,7 @@ Response:
 {
   "status": "ok",
   "healthy_backends": 2,
-  "total_backends": 3,
+  "total_backends": 2,
   "timestamp": "2026-02-10T12:23:00Z"
 }
 ```
@@ -127,6 +141,7 @@ Response:
 ### Proxied Endpoints (routed to backends)
 
 **GET /api/user?id=<id>**
+
 Get user data from a backend.
 
 ```bash
@@ -135,13 +150,17 @@ curl -H "X-API-Key: key-admin" http://localhost:8080/api/user?id=456
 ```
 
 **POST /api/echo**
+
 Echo the request body back.
 
 ```bash
-curl -X POST http://localhost:8080/api/echo -H "Content-Type: application/json" -d '{"message":"hello"}'
+curl -X POST http://localhost:8080/api/echo \
+  -H "Content-Type: application/json" \
+  -d '{"message":"hello"}'
 ```
 
 **GET /api/data**
+
 Get sample data array (good for testing load balancing).
 
 ```bash
@@ -149,13 +168,71 @@ curl http://localhost:8080/api/data
 ```
 
 **GET /api/slow**
+
 Slow endpoint with 500ms delay (tests timeout handling).
 
 ```bash
 curl http://localhost:8080/api/slow
 ```
 
-## Authentication
+## Testing
+
+### Using Test Client
+
+```bash
+# Check gateway health
+go run . -mode client -cmd health
+
+# Test user endpoint with multiple requests
+go run . -mode client -cmd user -count 5
+
+# Test with API key
+go run . -mode client -cmd user -key key-admin
+
+# Test authentication (tries valid and invalid keys)
+go run . -mode client -cmd auth
+
+# Test rate limiting
+go run . -mode client -cmd rate-limit -count 150
+
+# Run all tests
+make test
+```
+
+### Available Test Commands
+
+| Command | Purpose |
+|---------|---------|
+| `health` | Check gateway health and backend status |
+| `echo` | Echo POST request to backend |
+| `user` | Get user data from backend |
+| `data` | Get sample data (demonstrates load balancing) |
+| `slow` | Test slow endpoint (500ms delay) |
+| `auth` | Test authentication with various API keys |
+| `rate-limit` | Test rate limiting behavior |
+
+### Manual Testing
+
+```bash
+# Load balancing test (observe backend rotation)
+for i in {1..6}; do
+  echo "Request $i:"
+  curl -s http://localhost:8080/api/data | jq .backend
+done
+
+# Rate limiting test
+for i in {1..20}; do
+  status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/user)
+  echo "Request $i: $status"
+done
+
+# Health check monitoring
+watch -n 0.5 'curl -s http://localhost:8080/api/data | jq .backend'
+```
+
+## Features
+
+### Authentication
 
 The gateway validates API keys via the `X-API-Key` header:
 
@@ -163,40 +240,38 @@ The gateway validates API keys via the `X-API-Key` header:
 # Valid key (allowed)
 curl -H "X-API-Key: key-admin" http://localhost:8080/api/user
 
-# Invalid key (rejected)
+# Invalid key (rejected with 401)
 curl -H "X-API-Key: invalid-key" http://localhost:8080/api/user
 
-# Returns 401 Unauthorized if key is invalid
+# No key (allowed - keys are optional)
+curl http://localhost:8080/api/user
 ```
 
-**Pre-configured Keys:**
-- `key-test-1`
-- `key-test-2`
-- `key-admin`
+### Rate Limiting
 
-To add more keys, edit the `main.go` file in the `runGateway` function:
-
-```go
-apiKeys["your-new-key"] = true
-```
-
-## Rate Limiting
-
-The gateway implements per-IP and per-API-key rate limiting using token buckets:
+Implements per-IP and per-API-key rate limiting using token buckets:
 
 - **Per IP**: Default 100 requests/minute (configurable with `-rate-limit`)
 - **Per Key**: Default 1000 requests/minute (configurable with `-key-rate-limit`)
 
 When a limit is exceeded, the gateway returns HTTP 429 (Too Many Requests).
 
-Test rate limiting:
-```bash
-go run . -mode client -cmd rate-limit -count 200
+**Token Bucket Algorithm**:
+```
+Capacity = Rate Limit (requests per minute)
+Refill Rate = Capacity / 60 (tokens per second)
+
+Example: 100 requests/minute
+  Capacity = 100 tokens
+  Refill Rate = 1.67 tokens/second
+
+  If idle for 60 seconds: bucket refills to 100 tokens
+  If idle for 30 seconds: bucket refills to ~50 tokens
 ```
 
-## Load Balancing
+### Load Balancing
 
-The gateway distributes requests across backends using round-robin:
+Distributes requests across backends using round-robin:
 
 1. For each request, select the next healthy backend in sequence
 2. If a backend is unhealthy, skip it and try the next one
@@ -208,9 +283,7 @@ Test with multiple requests:
 go run . -mode client -cmd data -count 10
 ```
 
-Each response includes the backend name in the JSON, showing which backend processed the request.
-
-## Health Checks
+### Health Checks
 
 The gateway performs health checks on all backends every 10 seconds:
 
@@ -218,14 +291,25 @@ The gateway performs health checks on all backends every 10 seconds:
 2. Expects HTTP 200 OK response
 3. Marks backend as healthy or unhealthy
 4. Logs status changes
+5. Automatically routes around unhealthy backends
 
-To simulate an unhealthy backend:
+To test failover:
 ```bash
-# Backend will fail health checks and be marked unhealthy
-# Requests will be routed to other backends
+# Start watching requests
+watch -n 0.5 'curl -s http://localhost:8080/api/data | jq .backend'
+
+# In another terminal, kill a backend
+pkill -f "port 8081"
+
+# Observe: requests now route only to healthy backend
+
+# Restart the backend
+./api-gateway -mode backend -port 8081 -name "Backend-1"
+
+# Observe: requests resume routing to both backends
 ```
 
-## Logging
+### Request Logging
 
 All requests and responses are logged to `gateway.log` in JSON format:
 
@@ -248,49 +332,80 @@ View logs in real-time:
 tail -f gateway.log | jq .
 ```
 
-## Quick Start (Make)
-
+Log analysis:
 ```bash
-# Terminal 1: Start gateway
-make gateway
+# Count requests by backend
+jq -r '.backend' gateway.log | sort | uniq -c
 
-# Terminal 2: Start backend 1
-make backend1
+# Find rate-limited requests
+jq 'select(.status_code == 429)' gateway.log
 
-# Terminal 3: Start backend 2
-make backend2
+# Find authentication failures
+jq 'select(.status_code == 401)' gateway.log
 
-# Terminal 4: Run tests
-make test
+# Calculate average response time
+jq '.response_time_ms | tonumber' gateway.log | \
+  awk '{sum+=$1; n++} END {print "Avg:", sum/n, "ms"}'
+
+# Show slowest requests
+jq -S 'sort_by(.response_time_ms | tonumber) | reverse | .[0:10]' gateway.log
 ```
 
-Or all at once:
-```bash
-# Terminal 1
-make gateway &
-sleep 1
+## Architecture
 
-# Terminal 2
-make backend1 &
-sleep 1
+```
+Client Requests
+      ↓
+┌─────────────────────────────────────┐
+│   API Gateway (Port 8080)           │
+├─────────────────────────────────────┤
+│ • Auth Middleware (API Key Check)   │
+│ • Rate Limiter (Token Bucket)       │
+│ • Load Balancer (Round-Robin)       │
+│ • Request Logger                    │
+├─────────────────────────────────────┤
+│ Health Checker (Background)         │
+└─────────────────────────────────────┘
+      ↓      ↓      ↓
+   Backend1 Backend2 Backend3
+```
 
-# Terminal 3
-make backend2 &
-sleep 1
+### Request Flow
 
-# Terminal 4
-make test
-
-# Cleanup
-pkill -f api-gateway
+```
+1. Client Request Arrives
+   ↓
+2. Parse Request (extract IP, API key)
+   ↓
+3. Authentication Middleware (validate API key)
+   ↓
+4. Rate Limiting (check token bucket)
+   ↓
+5. Load Balancing (select healthy backend)
+   ↓
+6. Proxy Request (forward to backend)
+   ↓
+7. Log Request (write JSON log)
+   ↓
+8. Return Response to Client
 ```
 
 ## Performance
 
-- **Throughput**: ~5000-10000 req/s on modern hardware
+- **Throughput**: 5,000-10,000 requests/second on modern hardware
 - **Latency**: <10ms overhead (depends on backend response time)
-- **Memory**: ~10MB baseline + request buffer
+- **Memory**: ~10MB baseline + ~1KB per concurrent request
 - **Connections**: Supports 10k+ concurrent connections
+
+### Performance Tuning
+
+```bash
+# Linux system tuning
+ulimit -n 65536  # Increase file descriptor limit
+sysctl -w net.ipv4.tcp_max_syn_backlog=5000
+sysctl -w net.core.somaxconn=5000
+sysctl -w net.ipv4.ip_local_port_range="1024 65535"
+```
 
 ## Code Structure
 
@@ -300,71 +415,94 @@ api-gateway/
 ├── mock_backend.go      (Mock backend server for testing)
 ├── client.go            (Test client)
 ├── Makefile             (Build and test recipes)
+├── start.sh             (Quick start script)
 ├── go.mod               (Module definition)
+├── .gitignore           (Git ignore patterns)
+├── README.md            (This file)
+├── CLAUDE.md            (Development notes)
 └── gateway.log          (Request log - generated at runtime)
 ```
 
-## Line of Code Count
+### Line Count
 
-- `main.go`: ~450 LOC (gateway implementation)
-- `mock_backend.go`: ~260 LOC (mock backends)
-- `client.go`: ~360 LOC (test client)
-- **Total**: ~1070 LOC (core) + ~150 LOC (build/test) = ~1220 LOC
+- `main.go`: ~474 LOC (gateway implementation)
+- `mock_backend.go`: ~192 LOC (mock backends)
+- `client.go`: ~249 LOC (test client)
+- **Total**: ~915 LOC
 
-## Implementation Details
+## Troubleshooting
 
-### Rate Limiting (Token Bucket)
+### "Address already in use"
 
-Each IP/key has a token bucket:
-- Capacity: Requests per minute (e.g., 100 for IP)
-- Refill rate: Capacity / 60 tokens per second
-- Allow request if tokens >= 1, then decrement
+```bash
+# Find what's using the port
+lsof -i :8080
 
-```go
-bucket.refill()        // Add tokens based on elapsed time
-if bucket.tokens >= 1 {
-    bucket.tokens--    // Consume token
-    return true        // Allow request
-}
-return false           // Rate limited
+# Kill the process
+kill -9 <PID>
+
+# Or use a different port
+./api-gateway -mode gateway -port 8090
 ```
 
-### Load Balancing (Round-Robin)
+### Backends not responding
 
-Track current index into backends array:
+```bash
+# Verify backend is running
+curl http://localhost:8081/health
 
-```go
-idx := (current + offset) % len(backends)
-if backends[idx].Alive {
-    current = (idx + 1) % len(backends)
-    return backends[idx]
-}
+# Should return: {"status":"healthy","backend":"Backend-1"}
+
+# Check all services are running
+lsof -i :8080  # Gateway
+lsof -i :8081  # Backend 1
+lsof -i :8082  # Backend 2
 ```
 
-### Health Checks
+### Rate limiting too aggressive
 
-Background goroutine checks each backend every 10 seconds:
+```bash
+# Check current limits from logs
+jq 'select(.status_code == 429) | .client_ip' gateway.log | sort | uniq -c
 
-```go
-for range ticker.C {
-    for _, backend := range backends {
-        go checkBackendHealth(backend)
-    }
-}
+# Increase limits
+./api-gateway -mode gateway -rate-limit 500 -key-rate-limit 5000
 ```
+
+### Can't see round-robin behavior
+
+```bash
+# Make sure both backends are healthy
+curl http://localhost:8080/health
+
+# Should show: "healthy_backends": 2
+
+# If not, restart a backend:
+./api-gateway -mode backend -port 8082 -name "Backend-2"
+```
+
+## Use Cases
+
+1. **Microservices Gateway**: Route requests across service instances
+2. **Load Balancing**: Distribute traffic fairly
+3. **API Protection**: Rate limiting and authentication
+4. **Service Monitoring**: Health checks and logging
+5. **Development**: Test with mock backends
+6. **Learning**: Study Go concurrency and networking
 
 ## Future Enhancements
 
-- [ ] Weighted load balancing
-- [ ] Circuit breaker pattern
-- [ ] Request queuing/buffering
-- [ ] Prometheus metrics
-- [ ] TLS/HTTPS support
-- [ ] Request/response transformation
-- [ ] Caching layer
-- [ ] GraphQL support
-- [ ] WebSocket support
-- [ ] Configuration file (YAML/TOML)
+- Configuration file support (YAML/TOML)
+- Prometheus metrics endpoint
+- Circuit breaker pattern
+- Request/response caching
+- HTTPS/TLS support
+- Weighted load balancing
+- Least connections algorithm
+- IP hash / sticky sessions
+- WebSocket support
+- GraphQL support
+- gRPC support
 
 ## License
 
